@@ -1,0 +1,41 @@
+version: '3.8'
+
+networks:
+  ros-network:
+    driver: bridge
+
+services:
+  common_settings:
+    build:
+      context: .
+    runtime: nvidia
+    environment:
+      - DISPLAY=${DISPLAY}
+      - "ROS_MASTER_URI=http://roscore:11311"
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - QT_X11_NO_MITSHM=1 # Fix a bug with QT
+    user: ${UID}
+    volumes:
+      - ${HOME}/.Xauthority:/root/.Xauthority:rw
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - /etc/group:/etc/group:ro
+      - /etc/passwd:/etc/passwd:ro
+      - /etc/shadow:/etc/shadow:ro
+      - /etc/sudoers:/etc/sudoers:ro
+      - /etc/sudoers.d:/etc/sudoers.d:ro
+      - /home/${USER}:/home/${USER}:rw # Share your home with write permissions
+    privileged: true
+    networks:
+      - ros-network
+
+  rviz:
+    extends:
+      service: common_settings
+    command: rviz2
+
+  gazebo:
+    extends:
+      service: common_settings
+    command: gazebo
+
